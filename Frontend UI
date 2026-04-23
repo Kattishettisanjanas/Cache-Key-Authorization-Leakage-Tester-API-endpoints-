@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cache Leak Tester</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Cache-Key & Auth Leakage Tester</h1>
+
+    <input id="url" placeholder="API URL"><br>
+    <input id="tokenA" placeholder="Token A"><br>
+    <input id="tokenB" placeholder="Token B"><br>
+
+    <button onclick="runScan()">Run Scan</button>
+
+    <pre id="output"></pre>
+
+    <script src="app.js"></script>
+</body>
+</html>
