@@ -1,0 +1,76 @@
+# backend/scanner.py
+
+import requests
+import hashlib
+import json
+import time
+
+IGNORE_HEADERS = ["date", "server", "content-length"]
+
+def normalize_headers(headers):
+    normalized = {}
+    for k, v in headers.items():
+        if k.lower() not in IGNORE_HEADERS:
+            normalized[k.lower()] = v.strip()
+    return dict(sorted(normalized.items()))
+
+def fingerprint(headers, body):
+    normalized = json.dumps(headers, sort_keys=True) + body.strip()
+    return hashlib.sha256(normalized.encode()).hexdigest()
+
+def send_request(url, token):
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    response = requests.get(url, headers=headers)
+
+    return {
+        "status": response.status_code,
+        "headers": dict(response.headers),
+        "body": response.text
+    }
+
+def analyze(url, token_a, token_b, repeat=3):
+    results = {"A": [], "B": []}
+
+    for _ in range(repeat):
+        results["A"].append(send_request(url, token_a))
+        time.sleep(1)
+        results["B"].append(send_request(url, token_b))
+
+    def process(user_results):
+        processed = []
+        for r in user_results:
+            headers = normalize_headers(r["headers"])
+            fp = fingerprint(headers, r["body"])
+            processed.append({
+                "fingerprint": fp,
+                "headers": headers,
+                "body": r["body"],
+                "status": r["status"]
+            })
+        return processed
+
+    A = process(results["A"])
+    B = process(results["B"])
+
+    findings = []
+
+    if A[0]["fingerprint"] == B[0]["fingerprint"]:
+        findings.append(" Possible data leakage: identical fingerprints")
+
+    vary = A[0]["headers"].get("vary", "")
+    if "authorization" not in vary.lower():
+        findings.append(" Missing Vary: Authorization")
+
+    age_a = A[0]["headers"].get("age")
+    age_b = B[0]["headers"].get("age")
+
+    if age_a and age_b and age_a == age_b:
+        findings.append(" Shared cache detected via Age header")
+
+    return {
+        "A": A,
+        "B": B,
+        "findings": findings
+    }
