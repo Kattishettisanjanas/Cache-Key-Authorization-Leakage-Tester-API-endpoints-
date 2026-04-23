@@ -1,0 +1,16 @@
+# cli/cli.py
+
+import argparse
+from backend.scanner import analyze
+import json
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--url", required=True)
+parser.add_argument("--tokenA", required=True)
+parser.add_argument("--tokenB", required=True)
+
+args = parser.parse_args()
+
+result = analyze(args.url, args.tokenA, args.tokenB)
+
+print(json.dumps(result, indent=2))
