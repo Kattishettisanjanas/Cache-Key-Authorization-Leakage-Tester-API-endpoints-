@@ -1,0 +1,21 @@
+# backend/api_server.py
+
+from flask import Flask, request, jsonify
+from scanner import analyze
+
+app = Flask(__name__)
+
+@app.route("/scan", methods=["POST"])
+def scan():
+    data = request.json
+
+    url = data.get("url")
+    token_a = data.get("token_a")
+    token_b = data.get("token_b")
+
+    result = analyze(url, token_a, token_b)
+
+    return jsonify(result)
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
