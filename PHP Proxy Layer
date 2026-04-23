@@ -1,0 +1,21 @@
+<?php
+// php/proxy.php
+
+$url = $_GET['url'];
+$token = $_GET['token'];
+
+$options = [
+    "http" => [
+        "method" => "GET",
+        "header" => "Authorization: Bearer $token\r\n"
+    ]
+];
+
+$context = stream_context_create($options);
+$response = file_get_contents($url, false, $context);
+
+echo json_encode([
+    "headers" => $http_response_header,
+    "body" => $response
+]);
+?>
